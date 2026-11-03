@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JalShuddhi AI | Interactive Water Predictor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --text-main: #2d3748;
+      --text-muted: #718096;
+      --accent-blue: #4299e1;
+      --accent-hover: #3182ce;
+      --danger: #fc8181;
+      --warning: #f6e05e;
+      --success: #68d391;
+      --marginal-blue: #63b3ed;
+    }
+
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: var(--bg-gradient);
+      background-attachment: fixed;
+      color: var(--text-main);
+      margin: 0;
+      padding: 30px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Bubbly Background Animation */
+    .bubbles {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+    .bubble {
+      position: absolute;
+      bottom: -100px;
+      background-color: rgba(255, 255, 255, 0.4);
+      border-radius: 50%;
+      animation: rise 15s infinite ease-in;
+    }
+    .bubble:nth-child(1) { width: 40px; height: 40px; left: 10%; animation-duration: 8s; }
+    .bubble:nth-child(2) { width: 20px; height: 20px; left: 20%; animation-duration: 5s; animation-delay: 1s; }
+    .bubble:nth-child(3) { width: 50px; height: 50px; left: 35%; animation-duration: 10s; animation-delay: 2s; }
+    .bubble:nth-child(4) { width: 30px; height: 30px; left: 50%; animation-duration: 7s; animation-delay: 0s; }
+    .bubble:nth-child(5) { width: 60px; height: 60px; left: 65%; animation-duration: 12s; animation-delay: 3s; }
+    .bubble:nth-child(6) { width: 25px; height: 25px; left: 80%; animation-duration: 6s; animation-delay: 2s; }
+
+    @keyframes rise {
+      0% { transform: translateY(0) scale(1); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(-100vh) scale(1.5); opacity: 0; }
+    }
+
+    .dashboard {
+      background: var(--card-bg);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      border-radius: 30px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 900px;
+      overflow: hidden;
+      padding: 40px;
+      transition: all 0.3s ease;
+    }
+
+    .header-title {
+      margin: 0 0 10px 0;
+      font-size: 32px;
+      font-weight: 700;
+      color: #2b6cb0;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 30px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      background: rgba(255, 255, 255, 0.6);
+      padding: 15px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+      transition: transform 0.2s ease;
+    }
+
+    .field:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 15px rgba(0,0,0,0.05);
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    input {
+      background: transparent;
+      border: none;
+      border-bottom: 2px dashed #cbd5e0;
+      color: var(--text-main);
+      padding: 5px;
+      font-family: 'Quicksand', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    input:focus {
+      outline: none;
+      border-bottom-color: var(--accent-blue);
+      transform: scale(1.05);
+    }
+
+    /* Bouncy Action Button */
+    button {
+      margin-top: 40px;
+      width: 100%;
+      background-color: var(--accent-blue);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 20px;
+      font-family: 'Quicksand', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(66, 153, 225, 0.3);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    button:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    button:active {
+      transform: translateY(2px) scale(0.98);
+    }
+
+    #resultBox {
+      margin-top: 30px;
+      display: none;
+      font-family: 'Quicksand', sans-serif;
+      animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .report-card {
+      background: white;
+      border-radius: 25px;
+      overflow: hidden;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+      border: 2px solid transparent;
+    }
+
+    .report-header {
+      padding: 20px;
+      font-size: 20px;
+      font-weight: 700;
+      text-align: center;
+      color: white;
+    }
+
+    .report-body {
+      padding: 30px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .diagnostic-section {
+      background: #f7fafc;
+      padding: 20px;
+      border-radius: 20px;
+      border-left: 5px solid var(--accent-blue);
+    }
+
+    .diagnostic-title {
+      color: var(--text-muted);
+      font-size: 14px;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .safe-card { border-color: var(--success); }
+    .safe-card .report-header { background: var(--success); }
+    .safe-card .diagnostic-section { border-left-color: var(--success); }
+    
+    .unsafe-card { border-color: var(--danger); }
+    .unsafe-card .report-header { background: var(--danger); }
+    .unsafe-card .diagnostic-section { border-left-color: var(--danger); }
+
+    .marginal-card { border-color: var(--marginal-blue); }
+    .marginal-card .report-header { background: var(--marginal-blue); }
+    .marginal-card .diagnostic-section { border-left-color: var(--marginal-blue); }
+
+    ul { margin: 0; padding-left: 20px; color: #4a5568; line-height: 1.6; }
+    li { margin-bottom: 8px; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <!-- Animated Bubbles -->
+  <div class="bubbles">
+    <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+    <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+  </div>
+
+  <div class="dashboard">
+    <h1 class="header-title">🌊 JalShuddhi AI</h1>
+    <div class="subtitle">Smart Water Analysis & Resource Recovery</div>
+    
+    <form id="predictionForm">
+      <div class="grid">
+        <div class="field"><label>🧪 pH Level</label><input type="number" step="any" id="ph" value="7.20" required></div>
+        <div class="field"><label>🪨 Hardness (mg/L)</label><input type="number" step="any" id="hardness" value="204.80" required></div>
+        <div class="field"><label>🧊 Solids / TDS (ppm)</label><input type="number" step="any" id="solids" value="20791.30" required></div>
+        <div class="field"><label>🧴 Chloramines (ppm)</label><input type="number" step="any" id="chloramines" value="7.30" required></div>
+        <div class="field"><label>🧂 Sulfate (mg/L)</label><input type="number" step="any" id="sulfate" value="368.50" required></div>
+        <div class="field"><label>⚡ Conductivity (μS/cm)</label><input type="number" step="any" id="conductivity" value="564.30" required></div>
+        <div class="field"><label>🍂 Organic Carbon (ppm)</label><input type="number" step="any" id="organicCarbon" value="10.37" required></div>
+        <div class="field"><label>💨 Trihalomethanes (μg/L)</label><input type="number" step="any" id="trihalomethanes" value="86.99" required></div>
+        <div class="field"><label>🌫️ Turbidity (NTU)</label><input type="number" step="any" id="turbidity" value="2.96" required></div>
+      </div>
+      <button type="submit" id="actionBtn">✨ Analyze Water Quality</button>
+    </form>
+
+    <div id="resultBox"></div>
+  </div>
+
+  <script>
+    // Playful button reset
+    document.getElementById('predictionForm').addEventListener('input', function() {
+      const btn = document.getElementById('actionBtn');
+      btn.style.backgroundColor = 'var(--accent-blue)';
+      btn.style.boxShadow = '0 10px 20px rgba(66, 153, 225, 0.3)';
+      btn.innerText = '✨ Analyze Water Quality';
+    });
+
+    document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const btn = document.getElementById('actionBtn');
+      btn.innerText = '🫧 Crunching Numbers...';
+
+      const payload = {
+        ph: parseFloat(document.getElementById('ph').value),
+        hardness: parseFloat(document.getElementById('hardness').value),
+        solids: parseFloat(document.getElementById('solids').value),
+        chloramines: parseFloat(document.getElementById('chloramines').value),
+        sulfate: parseFloat(document.getElementById('sulfate').value),
+        conductivity: parseFloat(document.getElementById('conductivity').value),
+        organicCarbon: parseFloat(document.getElementById('organicCarbon').value),
+        trihalomethanes: parseFloat(document.getElementById('trihalomethanes').value),
+        turbidity: parseFloat(document.getElementById('turbidity').value)
+      };
+
+      const resultBox = document.getElementById('resultBox');
+      
+      // Reset animation for multiple clicks
+      resultBox.style.animation = 'none';
+      resultBox.offsetHeight; 
+      resultBox.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+      resultBox.style.display = 'block';
+      resultBox.innerHTML = '<div style="text-align:center; padding: 20px; font-weight: bold; color: var(--accent-blue);">Connecting to AI... 🚀</div>';
+
+      try {
+        const response = await fetch('http://172.20.10.2:5000/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        const probability = parseFloat(data.safety_probability);
+
+        // Dynamic Bouncy Button Colors
+        if (data.is_safe && probability >= 80) {
+            btn.style.backgroundColor = 'var(--success)';
+            btn.style.boxShadow = '0 10px 20px rgba(104, 211, 145, 0.4)';
+            btn.innerText = '🥳 High Safety (Code Green)';
+        } else if (data.is_safe && probability >= 70 && probability < 80) {
+            btn.style.backgroundColor = 'var(--marginal-blue)';
+            btn.style.boxShadow = '0 10px 20px rgba(99, 179, 237, 0.4)';
+            btn.innerText = '🤔 Marginal Safety (Code Blue)';
+        } else {
+            btn.style.backgroundColor = 'var(--danger)';
+            btn.style.boxShadow = '0 10px 20px rgba(252, 129, 129, 0.4)';
+            btn.innerText = '🚨 Contaminated (Code Red)';
+        }
+
+        // Logic Engine
+        let remediationSteps = [];
+        if (payload.ph < 6.5) remediationSteps.push("Drop in some alkaline (Sodium Hydroxide) to fix the acidic pH! 🧪");
+        if (payload.ph > 8.5) remediationSteps.push("Too alkaline! Use an acid feed system to balance it out. ⚖️");
+        if (payload.hardness > 250) remediationSteps.push("Super hard water detected. Time for Ion Exchange softeners! 🧽");
+        if (payload.solids > 1000) remediationSteps.push("Lots of dissolved solids. Spin up the Reverse Osmosis (RO) filters! 🌪️");
+        if (payload.chloramines > 4.0) remediationSteps.push("Chloramines are high. Activate the Activated Carbon scrubbers! 🖤");
+        if (remediationSteps.length === 0) remediationSteps.push("Just standard UV treatment and a little chlorination needed! ✨");
+
+        let secondaryUse = "";
+        if (payload.solids < 1500 && payload.ph >= 6.0 && payload.ph <= 8.5 && payload.chloramines < 4.0) {
+            secondaryUse = "<span style='color: var(--success); font-weight: 700; font-size: 16px;'>🌾 Perfect for Farm Irrigation!</span><br><span style='color:#718096;'>Let's send this to local crops instead of wasting it.</span>";
+        } else if (payload.solids < 3000 && payload.hardness < 400) {
+            secondaryUse = "<span style='color: #d69e2e; font-weight: 700; font-size: 16px;'>🏭 Industrial Cooling Only!</span><br><span style='color:#718096;'>Great for factory cooling towers.</span>";
+        } else if (payload.turbidity < 10) {
+            secondaryUse = "<span style='color: var(--marginal-blue); font-weight: 700; font-size: 16px;'>🚽 Municipal Sanitation!</span><br><span style='color:#718096;'>Route to graywater systems for toilet flushing and street cleaning.</span>";
+        } else {
+            secondaryUse = "<span style='color: var(--danger); font-weight: 700; font-size: 16px;'>🚒 Emergency Fire Reserves!</span><br><span style='color:#718096;'>Too dirty for much else, but perfect for fire hydrants. Don't dump it!</span>";
+        }
+
+        // Render Cards
+        if (data.is_safe) {
+          let cardClass = probability >= 80 ? "safe-card" : "marginal-card";
+          let statusText = probability >= 80 ? "🎉 YAY! Water is Safe to Drink!" : "💧 Hmm, Safe but Borderline!";
+          
+          resultBox.innerHTML = `
+            <div class="report-card ${cardClass}">
+              <div class="report-header">${statusText}</div>
+              <div class="report-body">
+                <div class="diagnostic-section">
+                   <div class="diagnostic-title">🤖 AI Confidence Score</div>
+                   <div style="font-size: 24px; font-weight: bold;">${probability}% Sure!</div>
+                   <p style="margin: 5px 0 0 0; color: #4a5568;">This water looks great for everyday municipal use.</p>
+                </div>
+              </div>
+            </div>
+          `;
+        } else {
+          let remediationHtml = remediationSteps.map(step => `<li>${step}</li>`).join('');
+          resultBox.innerHTML = `
+            <div class="report-card unsafe-card">
+              <div class="report-header">🚨 Uh Oh! Contamination Detected!</div>
+              <div class="report-body">
+                <div class="diagnostic-section">
+                   <div class="diagnostic-title">🤖 AI Confidence Score</div>
+                   <div style="font-size: 24px; font-weight: bold;">${probability}%</div>
+                   <p style="margin: 5px 0 0 0; color: var(--danger); font-weight: bold;">Do not drink this water!</p>
+                </div>
+                
+                <div class="diagnostic-section" style="border-left-color: #ecc94b;">
+                   <div class="diagnostic-title">♻️ Zero-Waste Alternative Use</div>
+                   ${secondaryUse}
+                </div>
+
+                <div class="diagnostic-section" style="border-left-color: #ed8936;">
+                   <div class="diagnostic-title">🛠️ How to Fix It</div>
+                   <ul>${remediationHtml}</ul>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      } catch (err) {
+        resultBox.innerHTML = `
+            <div class="report-card unsafe-card">
+              <div class="report-header">🔌 Connection Lost!</div>
+              <div class="report-body" style="text-align: center; font-weight: bold; color: var(--danger);">
+                Oops! Make sure your Python Flask API is running on Port 5000.
+              </div>
+            </div>`;
+      }
+    });
+  </script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('Service Worker Registered!', reg))
+        .catch(err => console.log('Service Worker Failed!', err));
+    });
+  }
+</script>
+</body>
+</html>
